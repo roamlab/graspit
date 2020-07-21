@@ -151,6 +151,7 @@ class MainWindow : public QObject
     void handleTendonSelectionArea();
     void handleTendonDetailsArea();
     void TendonForceInput_valueChanged(int f);
+    void TendonExcursionInput_valueChanged(int f);
     void tendonNamesBoxActivated(int i);
     void tendonVisibleCheckBox_toggled(bool vis);
     void forcesVisibleCheckBox_toggled(bool vis);

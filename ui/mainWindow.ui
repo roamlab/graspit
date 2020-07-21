@@ -333,15 +333,12 @@
           <bool>false</bool>
         </property>
       </widget>
-      <widget class="QLineEdit" name="tendonExcursionEdit" >
-        <property name="maximumSize" >
-          <size>
-            <width>40</width>
-            <height>32767</height>
-          </size>
+      <widget class="QSpinBox" name="TendonExcursionInput" >
+        <property name="toolTip" stdset="0" >
+          <string>Tendon Length</string>
         </property>
-        <property name="readOnly" >
-          <bool>true</bool>
+        <property name="minimum" >
+          <number>-100</number>
         </property>
       </widget>
       <widget class="QLabel" name="tendonVisibleLabel" >
@@ -383,7 +380,7 @@
       <addaction name="tendonPassiveForceLabel" />
       <addaction name="tendonPassiveForceEdit" />
       <addaction name="tendonExcursionLabel" />
-      <addaction name="tendonExcursionEdit" />
+      <addaction name="TendonExcursionInput" />
       <addaction name="tendonVisibleLabel" />
       <addaction name="tendonVisibleCheckBox" />
       <addaction name="forcesVisibleLabel" />

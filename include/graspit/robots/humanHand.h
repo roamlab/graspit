@@ -286,6 +286,9 @@ class Tendon {
     //! The default rest length, or -1 if no default has been specified
     float mDefaultRestLength;
 
+    //! The user-specified length of the tendon
+    float mReqLength;
+
     void updateForceIndicators();
 
   public:
@@ -356,6 +359,10 @@ class Tendon {
     void select();
     void deselect();
     bool isSelected() {return mSelected;}
+
+    void setReqLength(float f);
+
+    float getReqLength() {return mReqLength;}
 
     void setActiveForce(float f);
 

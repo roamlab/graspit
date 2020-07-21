@@ -155,6 +155,7 @@ MainWindow::MainWindow(QWidget *parent)
   QObject::connect(mUI->handSelectionBox, SIGNAL(activated(int)), this, SLOT(setCurrentHand(int)));
   // -- tendon toolbar
   QObject::connect(mUI->TendonForceInput, SIGNAL(valueChanged(int)), this, SLOT(TendonForceInput_valueChanged(int)));
+  QObject::connect(mUI->TendonExcursionInput, SIGNAL(valueChanged(int)), this, SLOT(TendonExcursionInput_valueChanged(int)));
   QObject::connect(mUI->tendonNamesBox, SIGNAL(activated(int)), this, SLOT(tendonNamesBoxActivated(int)));
   QObject::connect(mUI->tendonVisibleCheckBox, SIGNAL(toggled(bool)), this, SLOT(tendonVisibleCheckBox_toggled(bool)));
   QObject::connect(mUI->forcesVisibleCheckBox, SIGNAL(toggled(bool)), this, SLOT(forcesVisibleCheckBox_toggled(bool)));
@@ -1214,7 +1215,7 @@ void MainWindow::handleTendonSelectionArea()
     mUI->tendonPassiveForceLabel->setEnabled(false);
     mUI->tendonPassiveForceEdit->setEnabled(false);
     mUI->tendonExcursionLabel->setEnabled(false);
-    mUI->tendonExcursionEdit->setEnabled(false);
+    mUI->TendonExcursionInput->setEnabled(false);
     mUI->tendonVisibleLabel->setEnabled(false);
     mUI->tendonVisibleCheckBox->setEnabled(false);
     mUI->forcesVisibleLabel->setEnabled(false);
@@ -1228,7 +1229,7 @@ void MainWindow::handleTendonSelectionArea()
     mUI->tendonPassiveForceLabel->setEnabled(true);
     mUI->tendonPassiveForceEdit->setEnabled(true);
     mUI->tendonExcursionLabel->setEnabled(true);
-    mUI->tendonExcursionEdit->setEnabled(true);
+    mUI->TendonExcursionInput->setEnabled(true);
     mUI->tendonVisibleLabel->setEnabled(true);
     mUI->tendonVisibleCheckBox->setEnabled(true);
     if (mUI->tendonVisibleCheckBox->isChecked()) {
@@ -1253,6 +1254,8 @@ void MainWindow::handleTendonSelectionArea()
     //the spin box works in Newtons; convert from graspit units
     mUI->TendonForceInput->setValue(int(getForce * 1.0e-6));
 
+    /*float getLength = world->getSelectedTendon()->getExcursion();
+    mUI->TendonExcursionInput->setValue(int(getLength));*/
     handleTendonDetailsArea();
   }
 }
@@ -1266,7 +1269,7 @@ void MainWindow::handleTendonDetailsArea()
 
   QString exc;
   exc.setNum(world->getSelectedTendon()->getExcursion() , 'f' , 1);
-  mUI->tendonExcursionEdit->setText(exc);
+  mUI->TendonExcursionInput->setValue(exc.toInt());
 
   QString psf;
   float getForce = world->getSelectedTendon()->getPassiveForce() * 1.0e-6; //convert to Newtons
@@ -1281,6 +1284,13 @@ void MainWindow::TendonForceInput_valueChanged(int f)
 {
   float newForce = (float)f * 1.0e6; //the spin box works in Newtons; convert to graspit units
   world->getSelectedTendon()->setActiveForce(newForce);
+}
+
+void MainWindow::TendonExcursionInput_valueChanged(int f)
+{
+  float deltaLength = (float)f; //no change to units
+  float newLength = world->getSelectedTendon()->getCurrentLength();
+  world->getSelectedTendon()->setReqLength(newLength+deltaLength);
 }
 
 void MainWindow::tendonNamesBoxActivated(int i)

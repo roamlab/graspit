@@ -199,6 +199,7 @@ Tendon::Tendon(Robot *myOwner)
   mApplyPassiveForce = true;
   mPassiveForce = 0;
   mK = 0.0;
+  mReqLength=0;
 
   mIVForceIndRoot = new SoSeparator;
   mIVRoot->addChild(mIVForceIndRoot);
@@ -210,6 +211,13 @@ Tendon::Tendon(Robot *myOwner)
   mIVForceIndRoot->addChild(mIVForceIndMaterial);
   mIVForceIndicators = new SoSeparator;
   mIVForceIndRoot->addChild(mIVForceIndicators);
+}
+
+void Tendon::setReqLength(float f)
+{
+  if (f >= 0) { mReqLength = f; }
+  else {mReqLength = 0; }
+  updateGeometry();
 }
 
 void Tendon::setActiveForce(float f)
