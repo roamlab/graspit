@@ -337,8 +337,8 @@
         <property name="toolTip" stdset="0" >
           <string>Tendon Length</string>
         </property>
-        <property name="minimum" >
-          <number>-100</number>
+        <property name="maximum" >
+          <number>300</number>
         </property>
       </widget>
       <widget class="QLabel" name="tendonVisibleLabel" >

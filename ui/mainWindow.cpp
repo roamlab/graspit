@@ -1254,8 +1254,8 @@ void MainWindow::handleTendonSelectionArea()
     //the spin box works in Newtons; convert from graspit units
     mUI->TendonForceInput->setValue(int(getForce * 1.0e-6));
 
-    /*float getLength = world->getSelectedTendon()->getExcursion();
-    mUI->TendonExcursionInput->setValue(int(getLength));*/
+    float getLength = world->getSelectedTendon()->getCurrentLength();
+    mUI->TendonExcursionInput->setValue(int(getLength));
     handleTendonDetailsArea();
   }
 }
@@ -1267,9 +1267,9 @@ void MainWindow::handleTendonDetailsArea()
     return;
   }
 
-  QString exc;
+  /*QString exc;
   exc.setNum(world->getSelectedTendon()->getExcursion() , 'f' , 1);
-  mUI->TendonExcursionInput->setValue(exc.toInt());
+  mUI->TendonExcursionInput->setValue(exc.toInt());*/
 
   QString psf;
   float getForce = world->getSelectedTendon()->getPassiveForce() * 1.0e-6; //convert to Newtons
@@ -1291,6 +1291,7 @@ void MainWindow::TendonExcursionInput_valueChanged(int f)
   float deltaLength = (float)f; //no change to units
   float newLength = world->getSelectedTendon()->getCurrentLength();
   world->getSelectedTendon()->setReqLength(newLength+deltaLength);
+  printf("%f\n", newLength);
 }
 
 void MainWindow::tendonNamesBoxActivated(int i)
