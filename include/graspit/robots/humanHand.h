@@ -434,6 +434,7 @@ class Tendon {
 
     //! Returns true if any of the permanent insertion points is inside a wrapper
     bool insPointInsideWrapper();
+
 };
 
 //! A hand with tendon information
@@ -517,6 +518,9 @@ class HumanHand : public Hand {
     int tendonTorques(const std::set<size_t> &activeTendons,
                       std::vector<double> &activeTendonForces,
                       std::vector<double> &jointTorques);
+
+    //! Shortens selected tendon to the requested length, moving the finger's DoFs to comply 
+    int shortenTendon(float newLen);
 
     //! Returns true if any of the tendons has a permanent insertion point inside a wrapper
     bool insPointInsideWrapper();

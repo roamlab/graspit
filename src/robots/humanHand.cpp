@@ -1803,6 +1803,58 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
   return 0;
 }
 
+int HumanHand::shortenTendon(float newLen)
+{
+  std::vector<double> testForce = {1.0};
+  size_t i = 0;
+
+  // there's got to be a better way of finding the tendon index
+  while (!mTendonVec[i]->isSelected())
+  {
+    if (i == mTendonVec.size())
+    {
+      DBGA("No Selected Tendons Found");
+      return -1;
+    }
+    i++;
+  }
+  std::set<size_t> tmpSet {i};
+  // moving this out of the while loop since we don't actually change lengths
+  std::vector<double> myTorques;
+  tendonTorques(tmpSet,testForce,myTorques);
+  printf("resultant joint torques \n");
+  for(auto& value : myTorques) std::cout << value << " ";
+  printf("\n");
+  
+
+  /*while (mTendonVec[i]->getCurrentLength() > newLen)
+  {
+    std::vector<double> myTorques;
+    tendonTorques(tmpSet,testForce,myTorques);
+    printf("resultant joint torques \n")
+    for(auto& value : myTorques) std::cout << value << " ";
+    printf("\n");
+
+    double *currVals = new double[numDOF];
+    double *newVals = new double[getNumDOF()];
+    getDOFVals(currVals);
+    for (j = 0; j < getNumDOF(); j++)
+    {
+      /*
+      Here we add in functionality to change new jointVals and/or new DOFVals
+      to move hand based on list of joint torques
+      */
+      
+  //  }
+    //moveDOFToContacts(newVals, NULL, false);
+    //emitConfigChange();
+  //  delete [] currVals;
+  //  delete [] newVals;
+  //} 
+
+  return 0;
+}
+
 bool HumanHand::insPointInsideWrapper()
 {
   for (size_t i = 0; i < mTendonVec.size(); i++)

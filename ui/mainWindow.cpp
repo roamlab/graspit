@@ -1288,10 +1288,12 @@ void MainWindow::TendonForceInput_valueChanged(int f)
 
 void MainWindow::TendonExcursionInput_valueChanged(int f)
 {
-  float deltaLength = (float)f; //no change to units
-  float newLength = world->getSelectedTendon()->getCurrentLength();
-  world->getSelectedTendon()->setReqLength(newLength+deltaLength);
-  printf("%f\n", newLength);
+  
+  world->getSelectedTendon()->setReqLength(f);
+  if (f < int(world->getSelectedTendon()->getCurrentLength()))
+  {
+    ((HumanHand*)world->getCurrentHand())->shortenTendon(static_cast< float >(f));
+  }
 }
 
 void MainWindow::tendonNamesBoxActivated(int i)
