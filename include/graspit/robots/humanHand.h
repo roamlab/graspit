@@ -520,7 +520,7 @@ class HumanHand : public Hand {
                       std::vector<double> &jointTorques);
 
     //! Shortens selected tendon to the requested length, moving the finger's DoFs to comply 
-    int shortenTendon(float newLen);
+    int shortenTendon(int newLen);
 
     //! Returns true if any of the tendons has a permanent insertion point inside a wrapper
     bool insPointInsideWrapper();

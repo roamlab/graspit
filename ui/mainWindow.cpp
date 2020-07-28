@@ -1292,7 +1292,7 @@ void MainWindow::TendonExcursionInput_valueChanged(int f)
   world->getSelectedTendon()->setReqLength(f);
   if (f < int(world->getSelectedTendon()->getCurrentLength()))
   {
-    ((HumanHand*)world->getCurrentHand())->shortenTendon(static_cast< float >(f));
+    ((HumanHand*)world->getCurrentHand())->shortenTendon(f);
   }
 }
 
