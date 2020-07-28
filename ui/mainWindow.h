@@ -155,4 +155,5 @@ class MainWindow : public QObject
     void tendonNamesBoxActivated(int i);
     void tendonVisibleCheckBox_toggled(bool vis);
     void forcesVisibleCheckBox_toggled(bool vis);
+    void lockTendonCheckBox_toggled(bool state);
 };

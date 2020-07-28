@@ -196,10 +196,12 @@ Tendon::Tendon(Robot *myOwner)
   mCurrentLength = 0;
   mDefaultRestLength = -1;
   mPreTensionLength = -1;
+  mLockedLength = 0;
   mApplyPassiveForce = true;
   mPassiveForce = 0;
   mK = 0.0;
   mReqLength=0;
+  mLocked=0;
 
   mIVForceIndRoot = new SoSeparator;
   mIVRoot->addChild(mIVForceIndRoot);
@@ -212,6 +214,7 @@ Tendon::Tendon(Robot *myOwner)
   mIVForceIndicators = new SoSeparator;
   mIVForceIndRoot->addChild(mIVForceIndicators);
 }
+
 
 void Tendon::setReqLength(float f)
 {
@@ -842,6 +845,37 @@ void Tendon::setForcesVisible(bool v)
     mIVForceIndToggle->style = SoDrawStyle::FILLED;
   } else {
     mIVForceIndToggle->style = SoDrawStyle::INVISIBLE;
+  }
+}
+
+void Tendon::setExtensionLockedLength(double l)
+{
+  mSelected = 1;
+  HumanHand* mOwn = static_cast<HumanHand*>(mOwner);
+  if (l <= 0) { DBGA("WARNING: length 0 set on tendon"); }
+  if (l < mCurrentLength) { mOwn->shortenTendon(std::round(l)); }
+  mLockedLength = l;
+  /*
+    Do something here to implement constraints
+  */
+  computeSimplePassiveForces();
+  updateInsertionForces();
+  if (mVisible && mForcesVisible) { updateForceIndicators(); }
+}
+
+void Tendon::setExtensionLocked(bool s)
+{
+  mLocked = s;
+  if (s) {
+    /*
+      Do something here to store defaults before constraints
+    */
+    updateGeometry();
+    setExtensionLockedLength(mCurrentLength);
+  } else {
+    /*
+      Do something here to release constraints
+    */
   }
 }
 
@@ -1829,15 +1863,19 @@ int HumanHand::shortenTendon(int newLen)
     tendonTorques(tmpSet,testForce,mTorques);
     absTorques = mTorques;
     for(auto& f : absTorques) {f = f < 0.0 ? -f : f;}
-      
+
     targetDOF = std::distance(std::begin(absTorques), std::max_element(std::begin(absTorques), std::end(absTorques)));
     if (mTorques[targetDOF] > 0.0) desVals[targetDOF] += 0.01;
     if (mTorques[targetDOF] < 0.0) desVals[targetDOF] -= 0.01;  
-    moveDOFToContacts(desVals, NULL, true, true);
+    int moveable = moveDOFToContacts(desVals, NULL, true, true);
     printf("current tendon length: %0.2f \n", mTendonVec[i]->getCurrentLength());
     emitConfigChange();
     delete [] desVals;
     mTorques.clear();
+    if (!moveable) {
+      printf("tendon unable to move in this configuration\n");
+      break;
+    }
   } 
   return 0;
 }

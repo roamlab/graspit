@@ -159,6 +159,7 @@ MainWindow::MainWindow(QWidget *parent)
   QObject::connect(mUI->tendonNamesBox, SIGNAL(activated(int)), this, SLOT(tendonNamesBoxActivated(int)));
   QObject::connect(mUI->tendonVisibleCheckBox, SIGNAL(toggled(bool)), this, SLOT(tendonVisibleCheckBox_toggled(bool)));
   QObject::connect(mUI->forcesVisibleCheckBox, SIGNAL(toggled(bool)), this, SLOT(forcesVisibleCheckBox_toggled(bool)));
+  QObject::connect(mUI->lockTendonCheckBox, SIGNAL(toggled(bool)), this, SLOT(lockTendonCheckBox_toggled(bool)));
 }
 
 /*!
@@ -1220,6 +1221,8 @@ void MainWindow::handleTendonSelectionArea()
     mUI->tendonVisibleCheckBox->setEnabled(false);
     mUI->forcesVisibleLabel->setEnabled(false);
     mUI->forcesVisibleCheckBox->setEnabled(false);
+    mUI->lockTendonLabel->setEnabled(false);
+    mUI->lockTendonCheckBox->setEnabled(false);
     if (mUI->tendonNamesBox->isEnabled()) {
       mUI->tendonNamesBox->setCurrentItem(mUI->tendonNamesBox->count() - 1);    /* "none selected" */
     }
@@ -1232,6 +1235,8 @@ void MainWindow::handleTendonSelectionArea()
     mUI->TendonExcursionInput->setEnabled(true);
     mUI->tendonVisibleLabel->setEnabled(true);
     mUI->tendonVisibleCheckBox->setEnabled(true);
+    mUI->lockTendonLabel->setEnabled(true);
+    mUI->lockTendonCheckBox->setEnabled(true);
     if (mUI->tendonVisibleCheckBox->isChecked()) {
       mUI->forcesVisibleLabel->setEnabled(true);
       mUI->forcesVisibleCheckBox->setEnabled(true);
@@ -1278,6 +1283,7 @@ void MainWindow::handleTendonDetailsArea()
 
   mUI->tendonVisibleCheckBox->setChecked(world->getSelectedTendon()->isVisible());
   mUI->forcesVisibleCheckBox->setChecked(world->getSelectedTendon()->forcesVisible());
+  mUI->lockTendonCheckBox->setChecked(world->getSelectedTendon()->extensionLocked());
 }
 
 void MainWindow::TendonForceInput_valueChanged(int f)
@@ -1323,6 +1329,11 @@ void MainWindow::tendonVisibleCheckBox_toggled(bool vis)
 void MainWindow::forcesVisibleCheckBox_toggled(bool vis)
 {
   world->getSelectedTendon()->setForcesVisible(vis);
+}
+
+void MainWindow::lockTendonCheckBox_toggled(bool state)
+{
+  world->getSelectedTendon()->setExtensionLocked(state);
 }
 
 /*this populates tendon names box according to selected hand*/

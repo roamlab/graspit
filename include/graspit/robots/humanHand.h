@@ -273,6 +273,8 @@ class Tendon {
 
     bool mSelected;
 
+    bool mLocked;
+
     //! The current length of the tendon
     float mCurrentLength;
 
@@ -288,6 +290,9 @@ class Tendon {
 
     //! The user-specified length of the tendon
     float mReqLength;
+
+    //! The currently used length of the tendon when extension was locked
+    float mLockedLength;
 
     void updateForceIndicators();
 
@@ -397,6 +402,14 @@ class Tendon {
     void setForcesVisible(bool v);
 
     bool forcesVisible() {return mForcesVisible;}
+
+    void setExtensionLocked(bool s);
+
+    bool extensionLocked() {return mLocked;}
+
+    void setExtensionLockedLength(double l);
+
+    float getExtensionLockedLength() {return mLockedLength;}
 
     //! Applies previously computed forces at links that have insertion points.
     /*! Forces MUST have been updated by updateGeometry() and updateInsertionForces()*/
