@@ -393,9 +393,9 @@
             <position>-52 -30 40</position>
         </insertionPoint> -->
         <insertionPoint>
-            <chain>-1</chain>
-            <link>-1</link>
-            <position>-70 -45 40</position>
+            <chain>4</chain>
+            <link>0</link>
+            <position>-30 -17 10</position>
         </insertionPoint>
         <insertionPoint>
             <chain>4</chain>

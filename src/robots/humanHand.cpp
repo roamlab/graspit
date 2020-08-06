@@ -42,6 +42,9 @@
 #include "graspit/debug.h"
 #include "graspit/world.h"
 
+#include "graspit/graspitCore.h"
+#include "graspit/ivmgr.h"
+
 #define WRAPPER_TOLERANCE 0.995
 
 //#define PROF_ENABLED
@@ -855,9 +858,7 @@ void Tendon::setExtensionLockedLength(double l)
   if (l <= 0) { DBGA("WARNING: length 0 set on tendon"); }
   if (l < mCurrentLength) { mOwn->shortenTendon(std::round(l)); }
   mLockedLength = l;
-  /*
-    Do something here to implement constraints
-  */
+  printf("tendon extension locked at: %0.2f \n", mLockedLength);
   computeSimplePassiveForces();
   updateInsertionForces();
   if (mVisible && mForcesVisible) { updateForceIndicators(); }
@@ -867,15 +868,10 @@ void Tendon::setExtensionLocked(bool s)
 {
   mLocked = s;
   if (s) {
-    /*
-      Do something here to store defaults before constraints
-    */
     updateGeometry();
     setExtensionLockedLength(mCurrentLength);
   } else {
-    /*
-      Do something here to release constraints
-    */
+    printf("tendon extension unlocked.\n");
   }
 }
 
@@ -1893,3 +1889,87 @@ bool HumanHand::insPointInsideWrapper()
   return false;
 }
 
+bool
+HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDofVals,
+                             double *jointVals, int *stoppedJoints)
+{
+  bool done, moving;
+  std::vector<transf> newLinkTran;
+  bool *lockedTendons = new bool[mTendonVec.size()];
+  // collecting locked-tendon information
+  for (int k = 0; k < mTendonVec.size(); k++) {
+    if (getTendon(k)->extensionLocked()) {
+      lockedTendons[k] = true;
+    }else{
+      lockedTendons[k] = false;
+    }
+  }
+
+  DBGP("Getting joint movement from DOFs");
+  do {
+    moving = false; done = true;
+    getJointValues(jointVals);
+    //compute the aggregate move for all DOF's
+    for (int d = 0; d < numDOF; d++) {
+      //this check is now done by each DOF independently
+      //if ( fabs(dofVals[d] - dofVec[d]->getVal()) < 1.0e-5) continue;
+      DBGP("dofVec[d]->getVal() " << dofVec[d]->getVal());
+      if (dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
+        moving = true;
+        DBGP("actualDofVals[d] " << actualDofVals[d]);
+        DBGP("desiredDofVals[d] " << desiredDofVals[d]);
+        actualDofVals[d] = desiredDofVals[d];
+        DBGP("DOF " << d << " is moving");
+        DBGP("actualDofVals[d] " << actualDofVals[d]);
+        DBGP("desiredDofVals[d] " << desiredDofVals[d]);
+      } else {
+        actualDofVals[d] = dofVec[d]->getVal();
+      }
+    }
+    if (!moving) {
+      DBGP("No DOF movement; done.");
+      break;
+    }
+    //see if motion is allowed by existing contacts
+    for (int c = 0; c < getNumChains(); c++) {
+      KinematicChain *chain = getChain(c);
+      newLinkTran.resize(chain->getNumLinks(), transf::IDENTITY);
+      chain->infinitesimalMotion(jointVals, newLinkTran);
+      
+      for (int l = 0; l < chain->getNumLinks(); l++) {
+        Link *link = chain->getLink(l);
+        transf motion = newLinkTran[l];
+        if (link->contactsPreventMotion(motion)) {
+          DBGP("Chain " << link->getChainNum() << " link " << link->getLinkNum() << " is blocked.");
+          //we stop all joints that are in the same chain before the stopped link
+          stopJointsFromLink(link, jointVals, stoppedJoints);
+          done = false;
+          //once proximal links in a chain have been stopped, let's process distal links again
+          //before making a decision on them, as their movement will be different
+          break;
+        }
+        //check if movement results in violating tendons and disallow movement if so
+        for (int t = 0; t < mTendonVec.size(); t++) {
+          if(lockedTendons[t]){
+            getTendon(t)->updateGeometry();
+            float tLength = getTendon(t)->getCurrentLength();
+            float tLock = getTendon(t)->getExtensionLockedLength();
+            printf("current tendon length: %0.2f \n", getTendon(t)->getCurrentLength());
+            printf("locked tendon measure: %0.2f \n", getTendon(t)->getExtensionLockedLength());
+            if (tLength > tLock) {
+              printf("tendon Extension impossible\n");
+              stopJointsFromLink(link, jointVals, stoppedJoints);
+              done = false;
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (done) {
+      DBGP("All movement OK; done.");
+    }
+  } while (!done);
+   DBGP("returning from getJointValuesFromDOF");
+  return moving;
+}

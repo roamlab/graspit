@@ -55,7 +55,6 @@ class SoSphere;
 class SoCylinder;
 class SoTransform;
 class SoDrawStyle;
-class Tendon;
 
 class JointPulley {
 private:
@@ -479,6 +478,8 @@ class HumanHand : public Hand {
 
     int getNumTendonWrappers() {return mTendonWrapperVec.size();}
 
+    bool hasTendons() {return mTendonVec.size() > 0;}
+
     Tendon *getTendon(int i) {return mTendonVec[i];}
 
     TendonWrapper *getTendonWrapper(int i) {return mTendonWrapperVec[i];}
@@ -583,6 +584,10 @@ class HumanHand : public Hand {
       }
       return minDist;
     }
+
+    //! Overrides Robot::getJointValuesFromDOF and includes a check on whether tendon lengths increase
+    bool getJointValuesFromDOF(const double *desireddofVals, double *actualDofVals,
+                                       double *jointVals, int *stoppedJoints);
 
 };
 

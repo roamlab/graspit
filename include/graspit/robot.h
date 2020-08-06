@@ -42,7 +42,6 @@
 #include "graspit/body.h"
 #include "graspit/joint.h"
 
-
 class Grasp;
 class GloveInterface;
 class CyberGlove;
@@ -50,6 +49,7 @@ class EigenGraspInterface;
 class Matrix;
 class TiXmlElement;
 class BodySensor;
+class Tendon;
 
 //! Base class for all robots which are collections of links connected by moveable joints
 /*! A robot is collection of link bodies orgainized around a base link.
@@ -141,6 +141,9 @@ class Robot : public WorldElement {
 
     //! A vector of pointers to the sensors defined within this world
     std::vector<BodySensor *> sensorVec;
+
+    //! A vector of pointers to the tendons defined by HumanHand
+    std::vector<Tendon *> tendonVec;
 
     // Save and restore state
     //! Is used to save the current transform if we want to restore it later
