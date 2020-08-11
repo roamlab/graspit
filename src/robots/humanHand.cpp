@@ -1285,14 +1285,14 @@ int HumanHand::tendonEquilibrium(const std::set<size_t> &activeTendons,
     Matrix J(grasp->contactJacobian(joints, insPointLinkTrans));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(insPointLinkTrans.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     std::vector<double> magnitudes;
     mTendonVec[i]->getInsertionPointForceMagnitudes(magnitudes);
     Matrix M(&magnitudes[0], magnitudes.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     if (activeTendons.find(i) != activeTendons.end())
@@ -1324,7 +1324,7 @@ int HumanHand::tendonEquilibrium(const std::set<size_t> &activeTendons,
     }
   }
 
-  Matrix x(LeftHand.cols(), 1);
+  Matrix x(LeftHand.rows(), 1);
 
   if (compute_tendon_forces)
   {
@@ -1362,7 +1362,7 @@ int HumanHand::tendonEquilibrium(const std::set<size_t> &activeTendons,
   }
 
   //compute the residual joint torques
-  Matrix tau(LeftHand.cols(), 1);
+  Matrix tau(LeftHand.rows(), 1);
   matrixMultiply(LeftHand, x, tau);
   matrixAdd(tau, RightHand, tau);
   tau.getData(&jointResiduals);
@@ -1410,7 +1410,7 @@ int HumanHand::contactForcesFromJointTorques(std::list<Contact *> contacts,
 
   //select just the y and z components - hack for now
   Matrix D(yzForceBlockMatrix(contacts.size()));
-  Matrix JTD(JTran.cols(), D.cols());
+  Matrix JTD(JTran.rows(), D.cols());
   matrixMultiply(JTran, D, JTD);
 
   DBGA("JTD: \n" << JTD);
@@ -1440,14 +1440,14 @@ int HumanHand::contactTorques(std::list<Contact *> contacts,
     Matrix J(grasp->contactJacobian(joints, contacts));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(contacts.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     //JTD.print();
     if (contact_forces.size() != contacts.size()) {DBGA("Incorrect size for contact forces"); return -1;}
     Matrix M(&contact_forces[0], contact_forces.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     RightHand.copyMatrix(JTDM);
@@ -1519,14 +1519,14 @@ int HumanHand::contactEquilibrium(std::list<Contact *> contacts,
     Matrix J(grasp->contactJacobian(joints, insPointLinkTrans));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(insPointLinkTrans.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     std::vector<double> magnitudes;
     mTendonVec[i]->getInsertionPointForceMagnitudes(magnitudes);
     Matrix M(&magnitudes[0], magnitudes.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     assert(JTDM.cols() == LeftHand.cols());
@@ -1539,7 +1539,7 @@ int HumanHand::contactEquilibrium(std::list<Contact *> contacts,
     Matrix J(grasp->contactJacobian(joints, contacts));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(contacts.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     std::vector<double> magnitudes;
@@ -1547,8 +1547,8 @@ int HumanHand::contactEquilibrium(std::list<Contact *> contacts,
     //virtual contact normal points outwards, so use negative magnitude
     magnitudes.resize(contacts.size(), -1.0);
     Matrix M(&magnitudes[0], magnitudes.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     RightHand.copyMatrix(JTDM);
@@ -1567,7 +1567,7 @@ int HumanHand::contactEquilibrium(std::list<Contact *> contacts,
   }
 
   //compute the residual joint torques
-  Matrix tau(LeftHand.cols(), 1);
+  Matrix tau(LeftHand.rows(), 1);
   matrixMultiply(LeftHand, x, tau);
   RightHand.multiply(-1.0);
   matrixAdd(tau, RightHand, tau);
@@ -1622,14 +1622,14 @@ int HumanHand::tendonTorques(const std::set<size_t> &activeTendons,
     Matrix J(grasp->contactJacobian(joints, insPointLinkTrans));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(insPointLinkTrans.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     std::vector<double> magnitudes;
     mTendonVec[i]->getInsertionPointForceMagnitudes(magnitudes);
     Matrix M(&magnitudes[0], magnitudes.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     assert(JTDM.cols() == LeftHand.cols());
@@ -1654,7 +1654,7 @@ int HumanHand::tendonTorques(const std::set<size_t> &activeTendons,
     }
   }
   //compute the joint torques
-  Matrix tau(LeftHand.cols(), 1);
+  Matrix tau(LeftHand.rows(), 1);
   matrixMultiply(LeftHand, x, tau);
   jointTorques.resize(joints.size());
   //and return them
@@ -1706,14 +1706,14 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
     Matrix J(grasp->contactJacobian(joints, insPointLinkTrans));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(insPointLinkTrans.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
 
     std::vector<double> magnitudes;
     mTendonVec[i]->getInsertionPointForceMagnitudes(magnitudes);
     Matrix M(&magnitudes[0], magnitudes.size(), 1, true);
-    assert(M.cols() == JTD.cols());
-    Matrix JTDM(JTD.cols(), M.cols());
+    assert(M.rows() == JTD.cols());
+    Matrix JTDM(JTD.rows(), M.cols());
     matrixMultiply(JTD, M, JTDM);
 
     assert(JTDM.cols() == LeftHand.cols());
@@ -1741,7 +1741,7 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
     }
   }
   //compute the joint torques
-  Matrix tau(LeftHand.cols(), 1);
+  Matrix tau(LeftHand.rows(), 1);
   matrixMultiply(LeftHand, x, tau);
   DBGP("Joint torques: " << tau.elem(0, 0) << " " << tau.elem(1, 0));
 
@@ -1750,7 +1750,7 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
     Matrix J(grasp->contactJacobian(joints, contacts));
     Matrix JTran(J.transposed());
     Matrix D(insPtForceBlockMatrix(contacts.size()));
-    Matrix JTD(JTran.cols(), D.cols());
+    Matrix JTD(JTran.rows(), D.cols());
     matrixMultiply(JTran, D, JTD);
     RightHand.copyMatrix(JTD);
   }
@@ -1779,7 +1779,7 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
   */
 
   DBGP("Contact forces computed for " << contacts.size() << "contacts");
-  Matrix test(RightHand.cols(), 1);
+  Matrix test(RightHand.rows(), 1);
   matrixMultiply(RightHand, c, test);
   test.multiply(-1);
   matrixAdd(test, tau, test);
