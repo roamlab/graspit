@@ -122,6 +122,14 @@ SbVec3f TendonInsertionPoint::getWorldPosition()
   return toSbVec3f(worldPos);
 }
 
+SbVec3f TendonInsertionPoint::getWorldPositionAfterMotion(Link* link, const transf &move)
+{
+  position newWorldPos;
+  newWorldPos = move * mAttachPoint;
+
+  return toSbVec3f(newWorldPos);
+}
+
 void TendonInsertionPoint::createInsertionGeometry()
 {
   mIVInsertion = new SoSeparator;
@@ -404,6 +412,57 @@ void Tendon::removeWrapperIntersections()
   }
 }
 
+PROF_DECLARE(TENDON_REMOVE_INTERSECTIONS_AFTER_MOTION);
+void Tendon::removeWrapperIntersectionsAfterMotion(KinematicChain *chain, const std::vector<transf> &motion)
+{
+  PROF_TIMER_FUNC(TENDON_REMOVE_INTERSECTIONS_AFTER_MOTION);
+  int chain_num = chain->getNum();
+  for (std::list<TendonInsertionPoint *>::iterator insPt = mInsPointList.begin(); insPt != mInsPointList.end(); insPt++)
+  {
+    std::list<TendonInsertionPoint *>::iterator nextInsPt = insPt;
+    nextInsPt ++;
+    if (!(*insPt)->isPermanent() && insPt != mInsPointList.begin() && nextInsPt != mInsPointList.end())
+    {
+      std::list<TendonInsertionPoint *>::iterator prevInsPt = insPt;
+      prevInsPt--;
+      vec3 pPrev, pNext;
+      if ((*prevInsPt)->getChainNr() == chain_num)
+      {
+        int prevLinkNum = (*prevInsPt)->getLinkNr();
+        transf pMove = motion[prevLinkNum];
+        pPrev = SbVec3fTovec3((*prevInsPt)->getWorldPositionAfterMotion(chain->getLink(prevLinkNum), pMove));
+      } else {
+        pPrev = SbVec3fTovec3((*prevInsPt)->getWorldPosition());
+      }
+
+      if ((*nextInsPt)->getChainNr() == chain_num)
+      {
+        int nextLinkNum = (*nextInsPt)->getLinkNr();
+        transf nMove = motion[nextLinkNum];
+        pNext = SbVec3fTovec3((*nextInsPt)->getWorldPositionAfterMotion(chain->getLink(nextLinkNum), nMove));
+      } else{
+        pNext = SbVec3fTovec3((*nextInsPt)->getWorldPosition());
+      }
+      bool needed = false;
+      for (int j = 0; j < ((HumanHand *)getRobot())->getNumTendonWrappers(); j++)
+      {
+        TendonWrapper *wrapper = ((HumanHand *)getRobot())->getTendonWrapper(j);
+        position foo;
+        if (wrapperIntersection(wrapper, mTendonName, pPrev, pNext, foo))
+        {
+          needed = true;
+          break;
+        }
+      }
+      if (!needed)
+      {
+        removeInsertionPoint(insPt);
+        insPt = prevInsPt;
+      }
+    }
+  }
+}
+
 /*! Checks if a connector penetrates a cylindrical wrapper by more than the
   tolerance value. If so, it adds a temporary insertion point on the edge
   of the cylider. Problems:
@@ -437,6 +496,7 @@ void Tendon::checkWrapperIntersections()
           int linkNr = wrapper->getLinkNr();
           insertInsertionPoint(nextInsPt, chainNr, linkNr, newInsPtPos, wrapper->getMu(), false);
           new_insertion = true;
+          num_insertions++;
         }
       }
     }
@@ -452,6 +512,65 @@ void Tendon::checkWrapperIntersections()
     }
   }
 }
+
+PROF_DECLARE(TENDON_CHECK_INTERSECTIONS_AFTER_MOTION);
+void Tendon::checkWrapperIntersectionsAfterMotion(KinematicChain *chain, const std::vector<transf> &motion)
+{
+  PROF_TIMER_FUNC(TENDON_CHECK_INTERSECTIONS_AFTER_MOTION);
+  std::list<TendonInsertionPoint *>::iterator insPt = mInsPointList.begin();
+  int num_insertions = 0;
+  int chain_num = chain->getNum();
+  while (insPt != mInsPointList.end())
+  {
+    bool new_insertion = false;
+    std::list<TendonInsertionPoint *>::iterator nextInsPt = insPt;
+    nextInsPt ++;
+    if (nextInsPt != mInsPointList.end()) {
+      vec3 pCur, pNext;
+      if ((*insPt)->getChainNr() == chain_num) {
+        int curLinkNum = (*insPt)->getLinkNr();
+        transf cMove = motion[curLinkNum];
+        pCur = SbVec3fTovec3((*insPt)->getWorldPositionAfterMotion(chain->getLink(curLinkNum), cMove));
+      } else {
+        pCur = SbVec3fTovec3((*insPt)->getWorldPosition());
+      }
+
+      if ((*nextInsPt)->getChainNr() == chain_num)
+      {
+        int nextLinkNum = (*nextInsPt)->getLinkNr();
+        transf nMove = motion[nextLinkNum];
+        pNext = SbVec3fTovec3((*nextInsPt)->getWorldPositionAfterMotion(chain->getLink(nextLinkNum), nMove));
+      } else{
+        pNext = SbVec3fTovec3((*nextInsPt)->getWorldPosition());
+      }
+      for (int j = 0; j < ((HumanHand *)getRobot())->getNumTendonWrappers(); j++)
+      {
+        TendonWrapper *wrapper = ((HumanHand *)getRobot())->getTendonWrapper(j);
+        if (wrapper->isExempt(mTendonName)) { continue; }
+        position newInsPtPos;
+        if (wrapperIntersection(wrapper, mTendonName, pCur, pNext, newInsPtPos)) {
+          int chainNr = wrapper->getChainNr();
+          int linkNr = wrapper->getLinkNr();
+          insertInsertionPoint(nextInsPt, chainNr, linkNr, newInsPtPos, wrapper->getMu(), false);
+          new_insertion = true;
+          num_insertions++;
+        }
+      }
+    }
+    if (new_insertion && num_insertions++ > 10)
+    {
+      DBGA("More than 10 new tendon insertions in a single point; loop might be stuck, forcing continuation.");
+      printf("More than 10 new tendon insertions in a single point; loop might be stuck, forcing continuation.\n");
+      new_insertion = false;
+    }
+    if (!new_insertion)
+    {
+      insPt++;
+      num_insertions = 0;
+    }
+  }
+}
+
 
 /*! Updates the geometry of the connectors between insertion points, which
   need to move together with the robot's links. However, some of them
@@ -1014,6 +1133,71 @@ bool Tendon::loadFromXml(const TiXmlElement *root)
     addInsertionPoint(chain, link, position, friction, true);
   }
   return true;
+}
+
+PROF_DECLARE(TENDON_CHECK_CONSTRAINT);
+PROF_DECLARE(TENDON_CHECK_CONSTRAINT_CORE);
+bool Tendon::checkMotionViolatesConstraint(KinematicChain *chain, const std::vector<transf> &motion)
+{
+  if (!mLocked) {return false;}
+  bool onThisChain = false;
+  //pseudo update geometry using motion instead of actual LinkTrans
+  //by replacing all instances of (*insPt)->getWorldPosition() with
+  //(*insPt)->getWorldPositionAfterMotion()
+  PROF_TIMER_FUNC(TENDON_CHECK_CONSTRAINT);
+  checkWrapperIntersectionsAfterMotion(chain, motion);
+  removeWrapperIntersectionsAfterMotion(chain, motion);
+  updateGeometry();
+  mCurrentLength = 0;
+  int chain_num = chain->getNum();
+  printf("working on chain %d\n",chain_num);
+
+  //this part from updateGeometry()
+  PROF_START_TIMER(TENDON_CHECK_CONSTRAINT_CORE);
+  std::list<TendonInsertionPoint *>::iterator insPt, prevInsPt, newInsPt;
+  printf("test insertion world pos\n");
+  for (insPt = mInsPointList.begin(); insPt != mInsPointList.end(); insPt++)
+  {
+  prevInsPt = insPt;
+    if (insPt != mInsPointList.begin())
+    {
+      prevInsPt--;
+      vec3 pPrev, pCur;
+      if ((*prevInsPt)->getChainNr() == chain_num)
+      {
+        int prevLinkNum = (*prevInsPt)->getLinkNr();
+        transf pMove = motion[prevLinkNum];
+        pPrev = SbVec3fTovec3((*prevInsPt)->getWorldPositionAfterMotion(chain->getLink(prevLinkNum), pMove));
+      } else {
+        pPrev = SbVec3fTovec3((*prevInsPt)->getWorldPosition());
+      }
+      
+      if ((*insPt)->getChainNr() == chain_num)
+      {
+        onThisChain = true;
+        int curLinkNum = (*insPt)->getLinkNr();
+        transf cMove = motion[curLinkNum];
+        pCur = SbVec3fTovec3((*insPt)->getWorldPositionAfterMotion(chain->getLink(curLinkNum), cMove));
+      } else {
+        pCur = SbVec3fTovec3((*insPt)->getWorldPosition());
+      }
+      
+      vec3 dPrev = pCur - pPrev;
+      // distance between the two
+      float m = dPrev.norm();
+      // add it to tendon length
+      mCurrentLength += m;
+
+      //not going to update visuals because if movement succeeds,
+      //actual updateGeometry() will handle it
+    }
+  }
+  PROF_STOP_TIMER(TENDON_CHECK_CONSTRAINT_CORE);
+  if (!onThisChain){
+    return false;
+  }
+  printf("%s\n",mCurrentLength > getExtensionLockedLength() ? "true" : "false");
+  return (mCurrentLength > getExtensionLockedLength());
 }
 
 TendonWrapper::TendonWrapper(Robot *myOwner) :
@@ -1889,6 +2073,8 @@ bool HumanHand::insPointInsideWrapper()
   return false;
 }
 
+
+
 bool
 HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDofVals,
                              double *jointVals, int *stoppedJoints)
@@ -1948,20 +2134,16 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
           //before making a decision on them, as their movement will be different
           break;
         }
-        //check if movement results in violating tendons and disallow movement if so
-        for (int t = 0; t < mTendonVec.size(); t++) {
-          if(lockedTendons[t]){
-            getTendon(t)->updateGeometry();
-            float tLength = getTendon(t)->getCurrentLength();
-            float tLock = getTendon(t)->getExtensionLockedLength();
-            printf("current tendon length: %0.2f \n", getTendon(t)->getCurrentLength());
-            printf("locked tendon measure: %0.2f \n", getTendon(t)->getExtensionLockedLength());
-            if (tLength > tLock) {
-              printf("tendon Extension impossible\n");
-              stopJointsFromLink(link, jointVals, stoppedJoints);
-              done = false;
-              break;
-            }
+      }
+    //check if chain movement results in violating tendons and disallow movement if so
+      for (int t = 0; t < mTendonVec.size(); t++) {
+        if(lockedTendons[t]){
+          if(getTendon(t)->checkMotionViolatesConstraint(chain, newLinkTran))
+          {
+            DBGP("Tendon " << t << " blocks Chain " << link->getChainNum() );
+            moving = false;
+            // follows same rationale as link contact
+            break;
           }
         }
       }

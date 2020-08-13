@@ -134,7 +134,13 @@ class TendonInsertionPoint {
 
     bool isPermanent() const {return mPermanent;}
 
+    int getChainNr() {return mAttachChainNr;}
+    int getLinkNr() {return mAttachLinkNr;}
+
     SbVec3f getWorldPosition();
+
+    //! returns world position using given link transform
+    SbVec3f getWorldPositionAfterMotion(Link* link, const transf &move);
 
     vec3 getAttachPoint() const {return mAttachPoint;}
 
@@ -332,8 +338,14 @@ class Tendon {
     //! Checks if tendon intersect a wrapper and adds insertion points around the wrapper if needed
     void checkWrapperIntersections();
 
+    //! Checks if tendon intersects a wrapper given new link position
+    void checkWrapperIntersectionsAfterMotion(KinematicChain *chain, const std::vector<transf> &motion);
+
     //! Removes wrapper intersections if they are no longer needed
     void removeWrapperIntersections();
+
+    //! Removes wrapper intersections if they are no longer needed
+    void removeWrapperIntersectionsAfterMotion(KinematicChain *chain, const std::vector<transf> &motion);
 
     //! Returns the total number of insertion points
     int getNumInsPoints() const {return mInsPointList.size();}
@@ -446,6 +458,10 @@ class Tendon {
 
     //! Returns true if any of the permanent insertion points is inside a wrapper
     bool insPointInsideWrapper();
+
+    //! Returns true if proposed link configuration will violate tendon length constraints
+    //! Replicates much of Tendon::UpdateGeometry
+    bool checkMotionViolatesConstraint(KinematicChain *chain, const std::vector<transf> &cMotion);
 
 };
 
@@ -574,7 +590,7 @@ class HumanHand : public Hand {
     }
 
     //! Returns the minimum distance between consecutive permanent insertion points for all tendons
-    //! Does not look at distances accross tendons
+    //! Does not look at distances across tendons
     double minInsPointDistance()
     {
       double minDist = std::numeric_limits<double>::max();
@@ -584,6 +600,7 @@ class HumanHand : public Hand {
       }
       return minDist;
     }
+
 
     //! Overrides Robot::getJointValuesFromDOF and includes a check on whether tendon lengths increase
     bool getJointValuesFromDOF(const double *desireddofVals, double *actualDofVals,
