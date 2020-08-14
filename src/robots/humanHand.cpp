@@ -126,7 +126,6 @@ SbVec3f TendonInsertionPoint::getWorldPositionAfterMotion(Link* link, const tran
 {
   position newWorldPos;
   newWorldPos = move * mAttachPoint;
-
   return toSbVec3f(newWorldPos);
 }
 
@@ -1150,12 +1149,10 @@ bool Tendon::checkMotionViolatesConstraint(KinematicChain *chain, const std::vec
   updateGeometry();
   mCurrentLength = 0;
   int chain_num = chain->getNum();
-  printf("working on chain %d\n",chain_num);
 
   //this part from updateGeometry()
   PROF_START_TIMER(TENDON_CHECK_CONSTRAINT_CORE);
   std::list<TendonInsertionPoint *>::iterator insPt, prevInsPt, newInsPt;
-  printf("test insertion world pos\n");
   for (insPt = mInsPointList.begin(); insPt != mInsPointList.end(); insPt++)
   {
   prevInsPt = insPt;
@@ -1187,7 +1184,6 @@ bool Tendon::checkMotionViolatesConstraint(KinematicChain *chain, const std::vec
       float m = dPrev.norm();
       // add it to tendon length
       mCurrentLength += m;
-
       //not going to update visuals because if movement succeeds,
       //actual updateGeometry() will handle it
     }
@@ -1196,7 +1192,7 @@ bool Tendon::checkMotionViolatesConstraint(KinematicChain *chain, const std::vec
   if (!onThisChain){
     return false;
   }
-  printf("%s\n",mCurrentLength > getExtensionLockedLength() ? "true" : "false");
+  //printf("Violates Constraint: %s\n",mCurrentLength > getExtensionLockedLength() ? "true" : "false");
   return (mCurrentLength > getExtensionLockedLength());
 }
 
@@ -2053,7 +2049,7 @@ int HumanHand::shortenTendon(int newLen)
     delete [] desVals;
     mTorques.clear();
     if (!moveable) {
-      printf("tendon unable to move in this configuration\n");
+      printf("selected tendon unable to move in this configuration\n");
       break;
     }
   } 
@@ -2079,7 +2075,7 @@ bool
 HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDofVals,
                              double *jointVals, int *stoppedJoints)
 {
-  bool done, moving;
+  bool done, moving, tendonVio;
   std::vector<transf> newLinkTran;
   bool *lockedTendons = new bool[mTendonVec.size()];
   // collecting locked-tendon information
@@ -2090,17 +2086,17 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
       lockedTendons[k] = false;
     }
   }
-
+  tendonVio = false;
   DBGP("Getting joint movement from DOFs");
   do {
-    moving = false; done = true;
+    moving = false; done = true; 
     getJointValues(jointVals);
     //compute the aggregate move for all DOF's
     for (int d = 0; d < numDOF; d++) {
       //this check is now done by each DOF independently
       //if ( fabs(dofVals[d] - dofVec[d]->getVal()) < 1.0e-5) continue;
       DBGP("dofVec[d]->getVal() " << dofVec[d]->getVal());
-      if (dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
+      if (!tendonVio && dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
         moving = true;
         DBGP("actualDofVals[d] " << actualDofVals[d]);
         DBGP("desiredDofVals[d] " << desiredDofVals[d]);
@@ -2119,6 +2115,7 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
     //see if motion is allowed by existing contacts
     for (int c = 0; c < getNumChains(); c++) {
       KinematicChain *chain = getChain(c);
+      printf("Chain %d\n",c);
       newLinkTran.resize(chain->getNumLinks(), transf::IDENTITY);
       chain->infinitesimalMotion(jointVals, newLinkTran);
       
@@ -2133,15 +2130,20 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
           //once proximal links in a chain have been stopped, let's process distal links again
           //before making a decision on them, as their movement will be different
           break;
+          }
         }
-      }
     //check if chain movement results in violating tendons and disallow movement if so
       for (int t = 0; t < mTendonVec.size(); t++) {
-        if(lockedTendons[t]){
+        if(!lockedTendons[t]){continue;}
+        for (int l = 0; l < chain->getNumLinks(); l++){
+          Link *link = chain->getLink(l);
+          printf("Link %d\n", l);
           if(getTendon(t)->checkMotionViolatesConstraint(chain, newLinkTran))
           {
-            DBGP("Tendon " << t << " blocks Chain " << link->getChainNum() );
-            moving = false;
+            DBGP("Tendon " << t << " blocks Chain " << c );
+            printf("Tendon %d blocks Chain %d\n",t,c);
+            stopJointsFromLink(link, jointVals, stoppedJoints);
+            tendonVio = true;
             // follows same rationale as link contact
             break;
           }
