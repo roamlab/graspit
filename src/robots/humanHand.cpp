@@ -2038,7 +2038,9 @@ int HumanHand::shortenTendon(int newLen)
     getDOFVals(desVals);
     tendonTorques(tmpSet,testForce,mTorques);
     absTorques = mTorques;
-    for(auto& f : absTorques) {f = f < 0.0 ? -f : f;}
+    for (size_t f = 0; f < absTorques.size(); f++) {
+      if (absTorques[f] < 0.0){absTorques[f] = -absTorques[f];}
+    }
 
     targetDOF = std::distance(std::begin(absTorques), std::max_element(std::begin(absTorques), std::end(absTorques)));
     if (mTorques[targetDOF] > 0.0) desVals[targetDOF] += 0.01;
@@ -2078,15 +2080,10 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
   bool done, moving, tendonVio;
   std::vector<transf> newLinkTran;
   bool *lockedTendons = new bool[mTendonVec.size()];
+  double *initialJointVals = new double[ getNumJoints() ];
+  getJointValues(initialJointVals);
   // collecting locked-tendon information
-  for (int k = 0; k < mTendonVec.size(); k++) {
-    if (getTendon(k)->extensionLocked()) {
-      lockedTendons[k] = true;
-    }else{
-      lockedTendons[k] = false;
-    }
-  }
-  tendonVio = false;
+  //tendonVio = false;
   DBGP("Getting joint movement from DOFs");
   do {
     moving = false; done = true; 
@@ -2096,7 +2093,7 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
       //this check is now done by each DOF independently
       //if ( fabs(dofVals[d] - dofVec[d]->getVal()) < 1.0e-5) continue;
       DBGP("dofVec[d]->getVal() " << dofVec[d]->getVal());
-      if (!tendonVio && dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
+      if (dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
         moving = true;
         DBGP("actualDofVals[d] " << actualDofVals[d]);
         DBGP("desiredDofVals[d] " << desiredDofVals[d]);
@@ -2110,14 +2107,19 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
     }
     if (!moving) {
       DBGP("No DOF movement; done.");
-      break;
+      printf("No DOF movement; done.\n");
+      return moving;
     }
     //see if motion is allowed by existing contacts
     for (int c = 0; c < getNumChains(); c++) {
       KinematicChain *chain = getChain(c);
-      printf("Chain %d\n",c);
       newLinkTran.resize(chain->getNumLinks(), transf::IDENTITY);
       chain->infinitesimalMotion(jointVals, newLinkTran);
+      if (jointVals == initialJointVals){
+      //if (std::equal(jointVals, jointVals + sizeof jointVals / sizeof *jointVals, initialJointVals)) {
+        printf("No Change in Chain %d\n",c);
+        continue;
+      }
       
       for (int l = 0; l < chain->getNumLinks(); l++) {
         Link *link = chain->getLink(l);
@@ -2134,16 +2136,19 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
         }
     //check if chain movement results in violating tendons and disallow movement if so
       for (int t = 0; t < mTendonVec.size(); t++) {
-        if(!lockedTendons[t]){continue;}
-        for (int l = 0; l < chain->getNumLinks(); l++){
-          Link *link = chain->getLink(l);
-          printf("Link %d\n", l);
+        //if(tendonVio){continue;}
+        if(!getTendon(t)->extensionLocked()){continue;}
+        for (int l = chain->getNumLinks(); l > 0; l--){
+          Link *link = chain->getLink(l-1);
           if(getTendon(t)->checkMotionViolatesConstraint(chain, newLinkTran))
           {
             DBGP("Tendon " << t << " blocks Chain " << c );
             printf("Tendon %d blocks Chain %d\n",t,c);
+            //tendonVio = true;
+            done = false;
             stopJointsFromLink(link, jointVals, stoppedJoints);
-            tendonVio = true;
+            //moving = false;
+            //if (l>1) {done = false;}
             // follows same rationale as link contact
             break;
           }
@@ -2152,6 +2157,7 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
     }
     if (done) {
       DBGP("All movement OK; done.");
+      printf("Completed movement. Exiting\n");
     }
   } while (!done);
    DBGP("returning from getJointValuesFromDOF");
