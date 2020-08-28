@@ -125,7 +125,9 @@ SbVec3f TendonInsertionPoint::getWorldPosition()
 SbVec3f TendonInsertionPoint::getWorldPositionAfterMotion(Link* link, const transf &move)
 {
   position newWorldPos;
-  newWorldPos = move * mAttachPoint;
+  transf movedLinkTran = move % getAttachedLink()->getTran();
+  // why is a multplication operator using % ?
+  newWorldPos = movedLinkTran * mAttachPoint;
   return toSbVec3f(newWorldPos);
 }
 
@@ -2079,11 +2081,10 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
 {
   bool done, moving, tendonVio;
   std::vector<transf> newLinkTran;
+  std::vector<transf> identLinkTran;
   bool *lockedTendons = new bool[mTendonVec.size()];
   double *initialJointVals = new double[ getNumJoints() ];
   getJointValues(initialJointVals);
-  // collecting locked-tendon information
-  //tendonVio = false;
   DBGP("Getting joint movement from DOFs");
   do {
     moving = false; done = true; 
@@ -2091,7 +2092,6 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
     //compute the aggregate move for all DOF's
     for (int d = 0; d < numDOF; d++) {
       //this check is now done by each DOF independently
-      //if ( fabs(dofVals[d] - dofVec[d]->getVal()) < 1.0e-5) continue;
       DBGP("dofVec[d]->getVal() " << dofVec[d]->getVal());
       if (dofVec[d]->accumulateMove(desiredDofVals[d], jointVals, stoppedJoints)) {
         moving = true;
@@ -2114,10 +2114,11 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
     for (int c = 0; c < getNumChains(); c++) {
       KinematicChain *chain = getChain(c);
       newLinkTran.resize(chain->getNumLinks(), transf::IDENTITY);
-      chain->infinitesimalMotion(jointVals, newLinkTran);
-      if (jointVals == initialJointVals){
-      //if (std::equal(jointVals, jointVals + sizeof jointVals / sizeof *jointVals, initialJointVals)) {
-        printf("No Change in Chain %d\n",c);
+      identLinkTran.resize(chain->getNumLinks(), transf::IDENTITY);
+      chain->infinitesimalMotion(jointVals, newLinkTran); // okay but why is there movement with unrelated chains?
+
+      if (newLinkTran == identLinkTran){
+        //printf("No Change in Chain %d\n",c);
         continue;
       }
       
@@ -2136,7 +2137,6 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
         }
     //check if chain movement results in violating tendons and disallow movement if so
       for (int t = 0; t < mTendonVec.size(); t++) {
-        //if(tendonVio){continue;}
         if(!getTendon(t)->extensionLocked()){continue;}
         for (int l = chain->getNumLinks(); l > 0; l--){
           Link *link = chain->getLink(l-1);
@@ -2144,11 +2144,8 @@ HumanHand::getJointValuesFromDOF(const double *desiredDofVals, double *actualDof
           {
             DBGP("Tendon " << t << " blocks Chain " << c );
             printf("Tendon %d blocks Chain %d\n",t,c);
-            //tendonVio = true;
             done = false;
             stopJointsFromLink(link, jointVals, stoppedJoints);
-            //moving = false;
-            //if (l>1) {done = false;}
             // follows same rationale as link contact
             break;
           }
