@@ -976,7 +976,7 @@ void Tendon::setExtensionLockedLength(double l)
   mSelected = 1;
   HumanHand* mOwn = static_cast<HumanHand*>(mOwner);
   if (l <= 0) { DBGA("WARNING: length 0 set on tendon"); }
-  if (l < mCurrentLength) { mOwn->shortenTendon(std::round(l)); }
+  if (l < mCurrentLength) { mOwn->shortenTendon(std::floor(l+0.5)); }
   mLockedLength = l;
   printf("tendon extension locked at: %0.2f \n", mLockedLength);
   computeSimplePassiveForces();
@@ -2017,7 +2017,9 @@ int HumanHand::contactForcesFromTendonForces(std::list<Contact *> contacts,
 
 int HumanHand::shortenTendon(int newLen)
 {
-  std::vector<double> testForce = {1.0};
+  std::vector<double> testForce;
+  testForce.push_back(1.0);
+
   size_t i = 0;
   // there's got to be a better way of finding the tendon index
   while (!mTendonVec[i]->isSelected())
@@ -2029,10 +2031,11 @@ int HumanHand::shortenTendon(int newLen)
     }
     i++;
   }
-  const std::set<size_t> tmpSet {i};
+  size_t tmpArr[] = {i};
+  std::set<size_t> tmpSet (tmpArr, tmpArr + sizeof(tmpArr)/sizeof(tmpArr));
   std::vector<double> mTorques;
   std::vector<double> absTorques;
-  int targetDOF{};
+  int targetDOF;
 
   while (mTendonVec[i]->getCurrentLength() > newLen)
   {
@@ -2044,7 +2047,7 @@ int HumanHand::shortenTendon(int newLen)
       if (absTorques[f] < 0.0){absTorques[f] = -absTorques[f];}
     }
 
-    targetDOF = std::distance(std::begin(absTorques), std::max_element(std::begin(absTorques), std::end(absTorques)));
+    targetDOF = std::distance(absTorques.begin(),std::max_element(absTorques.begin(), absTorques.end()));
     if (mTorques[targetDOF] > 0.0) desVals[targetDOF] += 0.01;
     if (mTorques[targetDOF] < 0.0) desVals[targetDOF] -= 0.01;  
     int moveable = moveDOFToContacts(desVals, NULL, true, true);
