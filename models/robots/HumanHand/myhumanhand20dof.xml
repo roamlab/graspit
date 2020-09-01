@@ -387,11 +387,6 @@
             <link>-1</link>
             <position>20 -10 20</position>
         </insertionPoint>
-<!--         <insertionPoint>
-            <chain>-1</chain>
-            <link>-1</link>
-            <position>-52 -30 40</position>
-        </insertionPoint> -->
         <insertionPoint>
             <chain>4</chain>
             <link>0</link>
@@ -432,106 +427,11 @@
         </insertionPoint>
     </tendon>
 
-<!--     <tendon name="MyHand Abductor">
-        <insertionPoint>
-            <chain>-1</chain>
-            <link>-1</link>
-            <position>-40 27 -20</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>-1</chain>
-            <link>-1</link>
-            <position>-50 15 30</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>4</chain>
-            <link>0</link>
-            <position>-10 -18 0</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>4</chain>
-            <link>1</link>
-            <position>0 0 0</position>
-        </insertionPoint>
-    </tendon> -->
-<!-- 
-    <tendon name="Index Flexor Profundus">
-        <insertionPoint>
-            <chain>-1</chain>
-            <link>-1</link>
-            <position>-20 -20.34 -10.0</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>0</link>
-            <position>30 -7.6 0.8</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>0</link>
-            <position>6 -7.5 0.8</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>1</link>
-            <position>18.8 -6.1 0.54</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>1</link>
-            <position> 8 -5.4 1.12</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>2</link>
-            <position>15.6 -4.18 0.56</position>
-        </insertionPoint>
-    </tendon> -->
-   <!--  <tendon name="Terminal Extensor">
-        <insertionPoint>
-            <chain>0</chain>
-            <link>1</link>
-            <position>0.0 -4.1 -0.4</position>
-        </insertionPoint>
-        <insertionPoint>
-            <chain>0</chain>
-            <link>2</link>
-            <position>-15.6 -4.34 -0.38</position>
-        </insertionPoint>
-    </tendon> -->
-    <!-- <tendonWrapper>
-        <chain>0</chain>
-        <link>0</link>
-        <position>0 0 0</position>
-        <orientation>0 0 1</orientation>
-        <radius>8</radius>  
-    </tendonWrapper>
-    <tendonWrapper>
-        <chain>0</chain>
-        <link>1</link>
-        <position>0 0 0</position>
-        <orientation>0 0 1</orientation>
-        <radius>5</radius>  
-    </tendonWrapper>
-    <tendonWrapper>
-        <chain>0</chain>
-        <link>0</link>
-        <position>42 0 0</position>
-        <orientation>0 0 1</orientation>
-        <radius>10</radius>
-    </tendonWrapper> -->
-<!--     <tendonWrapper>
-        <chain>4</chain>
-        <link>0</link>
-        <position>-8 0 0</position>
-        <orientation>1 0 0</orientation>
-        <radius>16</radius>  
-    </tendonWrapper> -->
     <tendonWrapper>
         <chain>4</chain>
         <link>0</link>
         <position>0 0 5</position>
-        <orientation>0 0 1</orientation>
+        <orientation>.12 0 .8</orientation>
         <radius>18</radius>  
     </tendonWrapper>
         <tendonWrapper>
@@ -541,27 +441,15 @@
         <orientation>0 0 1</orientation>
         <radius>10</radius>  
     </tendonWrapper>
-<!--     <tendonWrapper>
-        <chain>-1</chain>
-        <link>-1</link>
-        <position>-45 -10 22</position>
-        <orientation>.4 0 .4</orientation>
-        <radius>27</radius>
-    </tendonWrapper> -->
+
+
     <tendonWrapper>
         <chain>-1</chain>
         <link>-1</link>
-        <position>-20 -10 25</position>
-        <orientation>0 0 1</orientation>
+        <position>-20 -10 27</position>
+        <orientation>.15 0 .8</orientation>
         <radius>20</radius>
     </tendonWrapper>
-<!--     <tendonWrapper>
-        <chain>-1</chain>
-        <link>-1</link>
-        <position>-45 3 3</position>
-        <orientation>1 0 0</orientation>
-        <radius>25</radius>
-    </tendonWrapper> -->
     <tendonWrapper>
         <chain>-1</chain>
         <link>-1</link>
