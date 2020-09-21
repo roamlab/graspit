@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <root>
-	<material>plastic</material>
-	<mass>500</mass>
-	<cog>0 0 0</cog>
-	<geometryFile type="Inventor">001_chips_can.wrl</geometryFile>
+    <material>plastic</material>
+    <mass>100</mass>
+    <cog>0 0 50</cog>
+    <geometryFile type="Inventor">001_chips_can.wrl</geometryFile>
 </root>
