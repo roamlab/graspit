@@ -1,0 +1,52 @@
+#Inventor V2.1 ascii
+#material rubber
+#mass 50
+#cog 0 0 0
+
+Separator { # Body
+
+    Material {
+        ambientColor    0.4 0.4 0.4
+        diffuseColor    0.4 0.4 0.4
+        }
+
+        RotationXYZ {
+            axis   Z
+            angle  1.57
+        }
+
+
+        Translation {translation  0 25 0 }
+
+        Cylinder { radius 10 height 50 }
+
+}
+
+
+Separator { # Body
+
+    Material {
+        ambientColor    0.4 0.4 0.4
+        diffuseColor    0.4 0.4 0.4
+        }
+
+
+        Sphere {radius 10}
+
+
+}
+
+
+Separator { # Body
+
+    Material {
+        ambientColor    0.4 0.4 0.4
+        diffuseColor    0.4 0.4 0.4
+        }
+
+        Translation {translation -50 0 0 }
+
+        Sphere {radius 10}
+
+
+}

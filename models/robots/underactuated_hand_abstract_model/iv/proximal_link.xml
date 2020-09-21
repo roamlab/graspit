@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<root>
+    <material>rubber</material>
+    <!-- <youngs>1500000</youngs> -->
+    <mass>100</mass>
+    <cog>30 0 0</cog>
+    <inertia_matrix>0 0 0 0 0 0 0 0 0</inertia_matrix>
+    <geometryFile>proximal_link.iv</geometryFile>
+</root>

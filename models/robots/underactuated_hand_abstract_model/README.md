@@ -1,0 +1,2 @@
+# The abstract hand model in GraspIt!
+All joints are independent (not considering underactuation), the link lengths and finger positions are subject to change in GraspIt! (but the geometry of each link does not change).

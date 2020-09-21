@@ -1,0 +1,17 @@
+#Inventor V2.1 ascii
+#material rubber
+#mass 50
+#cog 0 0 0
+
+
+Separator { # Body
+
+    Material {
+        ambientColor    0.4 0.4 0.4
+        diffuseColor    0.4 0.4 0.4
+        }
+
+
+        Sphere {radius 0.001}
+
+}
