@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<root>
+    <material>metal</material>
+    <mass>150</mass>
+    <cog>0 0 0</cog>
+    <geometryFile type="Inventor">017_orange.wrl</geometryFile>
+</root>
